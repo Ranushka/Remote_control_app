@@ -1,0 +1,24 @@
+name: remote_control_controller
+version: 0.1.0
+publish_to: 'none'
+description: Flutter controller for the Remote Control host
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_hooks: ^0.20.4
+  mobile_scanner: ^3.5.5
+  web_socket_channel: ^2.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/

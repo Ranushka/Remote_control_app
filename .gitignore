@@ -1,0 +1,20 @@
+# Node
+node_modules/
+host/node_modules/
+
+# Flutter / Dart
+.dart_tool/
+build/
+controller_app/ios/
+controller_app/android/
+controller_app/macos/
+controller_app/windows/
+controller_app/linux/
+controller_app/web/
+controller_app/.flutter-plugins
+controller_app/.flutter-plugins-dependencies
+controller_app/.packages
+controller_app/pubspec.lock
+
+# macOS
+.DS_Store
