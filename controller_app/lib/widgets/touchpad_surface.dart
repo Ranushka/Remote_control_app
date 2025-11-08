@@ -26,19 +26,24 @@ class TouchpadSurface extends HookWidget {
   Widget build(BuildContext context) {
     final mode = useState(TouchpadMode.pointer);
 
+    // Use scale gesture recognizer only. Scale is a superset of pan on
+    // modern Flutter channels, so having both pan and scale causes an
+    // assertion. We handle single-finger movement as a scale update with
+    // pointerCount == 1, and two-finger movement as scroll (pointerCount >= 2).
     return GestureDetector(
       onTap: onTap,
       onSecondaryTap: onSecondaryTap,
       onLongPress: onSecondaryTap,
-      onPanStart: (_) => mode.value = TouchpadMode.pointer,
-      onPanUpdate: (details) {
-        if (mode.value == TouchpadMode.pointer) {
-          onPointerDelta(details.delta * sensitivity);
-        }
-      },
-      onScaleStart: (_) => mode.value = TouchpadMode.scroll,
+      onScaleStart: (_) => mode.value = TouchpadMode.pointer,
       onScaleUpdate: (details) {
-        if (details.pointerCount >= 2) {
+        final count = details.pointerCount;
+        if (count <= 1) {
+          // Single-finger -> pointer movement. Use focalPointDelta which is
+          // the gesture's movement delta.
+          onPointerDelta(details.focalPointDelta * sensitivity);
+        } else {
+          // Two+ fingers -> scroll. Invert focalPointDelta to match
+          // existing sign convention in the host.
           onScroll(details.focalPointDelta * -1);
         }
       },
