@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'controller/connection_controller.dart';
 import 'widgets/touchpad_surface.dart';
+import 'widgets/settings_page.dart';
 
 void main() {
   runApp(const RemoteControlApp());
@@ -64,14 +65,16 @@ class ControllerHomePage extends HookWidget {
         title: const Text('Remote Control'),
         actions: [
           IconButton(
-            onPressed: () => showScanner.value = true,
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: 'Scan QR Code',
-          ),
-          IconButton(
-            onPressed: () => connectionController.retry(),
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reconnect',
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => SettingsPage(
+                  sensitivity: sensitivity.value,
+                  onSensitivityChanged: (v) => sensitivity.value = v,
+                ),
+              ));
+            },
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
           ),
         ],
       ),
@@ -82,10 +85,27 @@ class ControllerHomePage extends HookWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _StatusBanner(
-                  label: statusLabel,
-                  controllerStatus: connectionController.status,
-                  errorMessage: connectionController.errorMessage,
+                Row(
+                  children: [
+                    Expanded(
+                      child: _StatusBanner(
+                        label: statusLabel,
+                        controllerStatus: connectionController.status,
+                        errorMessage: connectionController.errorMessage,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () => showScanner.value = true,
+                      icon: const Icon(Icons.qr_code_scanner),
+                      tooltip: 'Scan QR Code',
+                    ),
+                    IconButton(
+                      onPressed: () => connectionController.retry(),
+                      icon: const Icon(Icons.refresh),
+                      tooltip: 'Reconnect',
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Expanded(
@@ -100,21 +120,8 @@ class ControllerHomePage extends HookWidget {
                 const SizedBox(height: 16),
                 _QuickActions(connectionController: connectionController),
                 const SizedBox(height: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pointer sensitivity: ${sensitivity.value.toStringAsFixed(1)}',
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                    Slider(
-                      min: 0.4,
-                      max: 3.0,
-                      value: sensitivity.value,
-                      onChanged: (value) => sensitivity.value = value,
-                    ),
-                  ],
-                ),
+                // Pointer sensitivity moved to Settings page.
+                const SizedBox.shrink(),
               ],
             ),
           ),
@@ -229,58 +236,114 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 12,
-      runSpacing: 12,
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
       children: [
-        FilledButton.icon(
-          onPressed: () => connectionController.sendKey('enter'),
-          icon: const Icon(Icons.keyboard_return),
-          label: const Text('Enter'),
+        // Group A: Left and Right Navigation
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  onPressed: () => connectionController.sendKey('left'),
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: 'Left',
+                ),
+              ),
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  onPressed: () => connectionController.sendKey('right'),
+                  icon: const Icon(Icons.arrow_forward),
+                  tooltip: 'Right',
+                ),
+              ),
+            ],
+          ),
         ),
-        FilledButton.icon(
-          onPressed: () => connectionController.sendKey('escape'),
-          icon: const Icon(Icons.close_fullscreen),
-          label: const Text('Esc'),
+        // Group B: Previous and Next
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'media.previous'}),
+                  icon: const Icon(Icons.skip_previous),
+                  tooltip: 'Previous',
+                ),
+              ),
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'media.next'}),
+                  icon: const Icon(Icons.skip_next),
+                  tooltip: 'Next',
+                ),
+              ),
+            ],
+          ),
         ),
-        FilledButton.icon(
-          onPressed: () => connectionController.sendKey('space'),
-          icon: const Icon(Icons.space_bar),
-          label: const Text('Space'),
-        ),
-        FilledButton.icon(
-          onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'media.play_pause'}),
-          icon: const Icon(Icons.play_arrow),
-          label: const Text('Play/Pause'),
-        ),
-        FilledButton.icon(
-          onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'media.next'}),
-          icon: const Icon(Icons.skip_next),
-          label: const Text('Next'),
-        ),
-        FilledButton.icon(
-          onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'media.previous'}),
-          icon: const Icon(Icons.skip_previous),
-          label: const Text('Previous'),
-        ),
-        FilledButton.icon(
-          onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'volume.up'}),
-          icon: const Icon(Icons.volume_up),
-          label: const Text('Vol +'),
-        ),
-        FilledButton.icon(
-          onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'volume.down'}),
-          icon: const Icon(Icons.volume_down),
-          label: const Text('Vol -'),
-        ),
-        FilledButton.icon(
-          onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'volume.mute'}),
-          icon: const Icon(Icons.volume_off),
-          label: const Text('Mute'),
-        ),
-        FilledButton.icon(
-          onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'power.sleep'}),
-          icon: const Icon(Icons.power_settings_new),
-          label: const Text('Sleep'),
+        // Group C: Volume
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'volume.down'}),
+                  icon: const Icon(Icons.volume_down),
+                  tooltip: 'Vol -',
+                ),
+              ),
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'volume.up'}),
+                  icon: const Icon(Icons.volume_up),
+                  tooltip: 'Vol +',
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
