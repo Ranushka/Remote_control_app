@@ -106,6 +106,10 @@ class ConnectionController extends ChangeNotifier {
     sendEvent({'type': 'key_press', 'key': key, 'action': 'tap', 'modifiers': modifiers});
   }
 
+  void sendText(String text) {
+    sendEvent({'type': 'text_input', 'text': text});
+  }
+
   Future<void> disconnect() async {
     _stopHeartbeat();
     await _channelSub?.cancel();

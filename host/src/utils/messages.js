@@ -4,6 +4,7 @@ const VALID_TYPES = new Set([
   'mouse_scroll',
   'key_press',
   'key_tap',
+  'text_input',
   'command',
   'heartbeat'
 ]);

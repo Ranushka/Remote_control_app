@@ -118,7 +118,10 @@ class ControllerHomePage extends HookWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _QuickActions(connectionController: connectionController),
+                _QuickActions(
+                  connectionController: connectionController,
+                  context: context,
+                ),
                 const SizedBox(height: 16),
                 // Pointer sensitivity moved to Settings page.
                 const SizedBox.shrink(),
@@ -229,9 +232,13 @@ class _StatusBanner extends StatelessWidget {
 }
 
 class _QuickActions extends StatelessWidget {
-  const _QuickActions({required this.connectionController});
+  const _QuickActions({
+    required this.connectionController,
+    required this.context,
+  });
 
   final ConnectionController connectionController;
+  final BuildContext context;
 
   @override
   Widget build(BuildContext context) {
@@ -345,7 +352,57 @@ class _QuickActions extends StatelessWidget {
             ],
           ),
         ),
+        // Group D: Keyboard
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            iconSize: 18,
+            onPressed: () => _showKeyboardDialog(context),
+            icon: const Icon(Icons.keyboard),
+            tooltip: 'Keyboard',
+          ),
+        ),
       ],
+    );
+  }
+
+  void _showKeyboardDialog(BuildContext context) {
+    final textController = TextEditingController();
+    final focusNode = FocusNode();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (context) {
+        return Opacity(
+          opacity: 0.0,
+          child: AlertDialog(
+            content: TextField(
+              controller: textController,
+              focusNode: focusNode,
+              decoration: const InputDecoration(
+                hintText: 'Type here...',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+              autocorrect: false,
+              enableSuggestions: false,
+              showCursor: false,
+              cursorColor: Colors.transparent,
+              style: const TextStyle(color: Colors.transparent),
+              keyboardType: TextInputType.text,
+              onChanged: (value) {
+                if (value.isNotEmpty) {
+                  final lastChar = value[value.length - 1];
+                  connectionController.sendText(lastChar);
+                }
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

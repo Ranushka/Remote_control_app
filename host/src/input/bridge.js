@@ -48,6 +48,8 @@ export class InputBridge {
         case 'key_press':
         case 'key_tap':
           return this.handleKey(event);
+        case 'text_input':
+          return this.handleTextInput(event);
         case 'command':
           return this.handleCommand(event);
       }
@@ -147,6 +149,30 @@ export class InputBridge {
       }
     } catch (err) {
       this.logger.error('Key failed', err);
+    }
+  }
+
+  async handleTextInput({ text = '' }) {
+    if (!text) return;
+    const robot = await this.ensureRobot();
+    try {
+      if (robot) {
+        robot.typeString(text);
+        this.logger.info(`Text typed: ${text}`);
+      } else if (process.platform === 'darwin') {
+        // Use AppleScript to type each character
+        for (const char of text) {
+          const cmd = `tell application "System Events" to keystroke "${char.replace(/"/g, '\\"')}"`;
+          await new Promise(resolve => {
+            exec(`osascript -e ${JSON.stringify(cmd)}`, resolve);
+          });
+        }
+        this.logger.info(`Text typed (AppleScript): ${text}`);
+      } else {
+        this.logger.info('Text input skipped', { text });
+      }
+    } catch (err) {
+      this.logger.error('Text input failed', err);
     }
   }
 
