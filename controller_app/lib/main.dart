@@ -353,15 +353,22 @@ class _QuickActions extends StatelessWidget {
           ),
         ),
         // Group D: Keyboard
-        SizedBox(
-          width: 36,
-          height: 36,
-          child: IconButton(
-            padding: EdgeInsets.zero,
-            iconSize: 18,
-            onPressed: () => _showKeyboardDialog(context),
-            icon: const Icon(Icons.keyboard),
-            tooltip: 'Keyboard',
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(4),
+          child: SizedBox(
+            width: 36,
+            height: 36,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              iconSize: 18,
+              onPressed: () => _showKeyboardDialog(context),
+              icon: const Icon(Icons.keyboard),
+              tooltip: 'Keyboard',
+            ),
           ),
         ),
       ],
@@ -372,6 +379,7 @@ class _QuickActions extends StatelessWidget {
     final textController = TextEditingController();
     final focusNode = FocusNode();
 
+    String previousText = '';
     showDialog(
       context: context,
       barrierColor: Colors.transparent,
@@ -394,10 +402,17 @@ class _QuickActions extends StatelessWidget {
               style: const TextStyle(color: Colors.transparent),
               keyboardType: TextInputType.text,
               onChanged: (value) {
-                if (value.isNotEmpty) {
-                  final lastChar = value[value.length - 1];
-                  connectionController.sendText(lastChar);
+                if (value.length < previousText.length) {
+                  // Backspace detected
+                  connectionController.sendKey('backspace');
+                } else if (value.length > previousText.length) {
+                  // New character(s) detected
+                  final last = value.substring(previousText.length);
+                  for (final ch in last.split('')) {
+                    connectionController.sendText(ch);
+                  }
                 }
+                previousText = value;
               },
             ),
           ),
