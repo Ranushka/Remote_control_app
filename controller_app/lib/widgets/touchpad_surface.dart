@@ -52,10 +52,13 @@ class TouchpadSurface extends HookWidget {
           color: Theme.of(context).colorScheme.surfaceVariant,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Center(
-          child: Text(
-            'Use single-finger drags to move the cursor.\nTwo-finger drag to scroll. Tap for left click, long-press for right click.',
-            textAlign: TextAlign.center,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Text(
+              'Use single-finger drags to move the cursor.\nTwo-finger drag to scroll. Tap for left click, long-press for right click.',
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       ),
