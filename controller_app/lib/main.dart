@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'controller/connection_controller.dart';
+import 'controller/discovery_controller.dart';
 import 'widgets/touchpad_surface.dart';
 import 'widgets/settings_page.dart';
 
@@ -34,8 +35,12 @@ class ControllerHomePage extends HookWidget {
     final connectionController = useMemoized(ConnectionController.new);
     useEffect(() => connectionController.dispose, [connectionController]);
     useListenable(connectionController);
+    final discoveryController = useMemoized(DiscoveryController.new);
+    useEffect(() => discoveryController.dispose, [discoveryController]);
+    useListenable(discoveryController);
 
     final showScanner = useState(false);
+    final showDiscovery = useState(false);
     final sensitivity = useState(1.0);
 
     Future<void> handleQr(String? value) async {
@@ -52,6 +57,15 @@ class ControllerHomePage extends HookWidget {
         );
       }
     }
+
+    useEffect(() {
+      if (showDiscovery.value) {
+        discoveryController.start();
+      } else {
+        discoveryController.stop();
+      }
+      return null;
+    }, [showDiscovery.value, discoveryController]);
 
     final statusLabel = switch (connectionController.status) {
       ControllerStatus.disconnected => 'Disconnected',
@@ -96,6 +110,14 @@ class ControllerHomePage extends HookWidget {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
+                      onPressed: () {
+                        showScanner.value = false;
+                        showDiscovery.value = true;
+                      },
+                      icon: const Icon(Icons.wifi_tethering),
+                      tooltip: 'Find Hosts',
+                    ),
+                    IconButton(
                       onPressed: () => showScanner.value = true,
                       icon: const Icon(Icons.qr_code_scanner),
                       tooltip: 'Scan QR Code',
@@ -129,6 +151,15 @@ class ControllerHomePage extends HookWidget {
             ),
           ),
           if (showScanner.value) _QrScannerOverlay(onDetect: handleQr, onClose: () => showScanner.value = false),
+          if (showDiscovery.value)
+            _DiscoveryOverlay(
+              controller: discoveryController,
+              onSelect: (device) {
+                connectionController.connect(ConnectionDetails(url: device.uri, sessionId: device.sessionId));
+                showDiscovery.value = false;
+              },
+              onClose: () => showDiscovery.value = false,
+            ),
         ],
       ),
     );
@@ -226,6 +257,148 @@ class _StatusBanner extends StatelessWidget {
               ),
             )
         ],
+      ),
+    );
+  }
+}
+
+class _DiscoveryOverlay extends StatelessWidget {
+  const _DiscoveryOverlay({
+    required this.controller,
+    required this.onSelect,
+    required this.onClose,
+  });
+
+  final DiscoveryController controller;
+  final ValueChanged<DiscoveredDevice> onSelect;
+  final VoidCallback onClose;
+
+  String _statusLabel() {
+    return switch (controller.status) {
+      DiscoveryStatus.initializing => 'Preparing discovery…',
+      DiscoveryStatus.scanning => 'Searching for hosts…',
+      DiscoveryStatus.error => 'Discovery error',
+      DiscoveryStatus.idle => 'Idle',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final devices = controller.devices;
+    final isScanning = controller.status == DiscoveryStatus.scanning || controller.status == DiscoveryStatus.initializing;
+    return ColoredBox(
+      color: Colors.black.withOpacity(0.85),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Text(
+                    'Available Hosts',
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    style: IconButton.styleFrom(backgroundColor: Colors.white10, foregroundColor: Colors.white),
+                    onPressed: onClose,
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  if (isScanning) ...[
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    _statusLabel(),
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () => controller.reScan(),
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    label: const Text('Scan again', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
+            ),
+            if (controller.errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  controller.errorMessage!,
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            Expanded(
+              child: devices.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isScanning)
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 12),
+                              child: Text(
+                                'Scanning your network…',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            )
+                          else
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 12),
+                              child: Text(
+                                'No hosts found yet.',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            ),
+                          if (!isScanning)
+                            const Text(
+                              'Ensure the host is running on the same network.',
+                              style: TextStyle(color: Colors.white54),
+                            ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: devices.length,
+                      itemBuilder: (context, index) {
+                        final device = devices[index];
+                        return Card(
+                          color: Colors.white12,
+                          child: ListTile(
+                            leading: const Icon(Icons.computer, color: Colors.white),
+                            title: Text(
+                              device.name,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            subtitle: Text(
+                              '${device.uri.host}:${device.uri.port}\nSession: ${device.sessionId.isEmpty ? 'Unknown' : device.sessionId}',
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                            isThreeLine: true,
+                            trailing: const Icon(Icons.chevron_right, color: Colors.white),
+                            onTap: () => onSelect(device),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

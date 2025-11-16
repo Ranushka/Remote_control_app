@@ -30,8 +30,9 @@ class SettingsPage extends HookWidget {
             ),
             Slider(
               min: 0.4,
-              max: 3.0,
-              value: local.value,
+              max: 10.0,
+              divisions: 96,
+              value: local.value.clamp(0.4, 10.0),
               onChanged: (v) {
                 local.value = v;
                 onSensitivityChanged(v);

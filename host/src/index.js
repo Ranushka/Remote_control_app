@@ -1,6 +1,8 @@
+import os from 'os';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { nanoid } from 'nanoid';
+import { Bonjour } from 'bonjour-service';
 import { getPrimaryAddress } from './utils/network.js';
 import { renderQr } from './utils/qr.js';
 import { parseMessage, isHeartbeat } from './utils/messages.js';
@@ -8,6 +10,9 @@ import { InputBridge } from './input/bridge.js';
 
 const inputBridge = new InputBridge();
 const clients = new Set();
+const bonjour = new Bonjour();
+const SERVICE_TYPE = 'remotecontrol';
+let bonjourService;
 
 const httpServer = createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -71,12 +76,36 @@ httpServer.listen(port, '0.0.0.0', () => {
   const sessionId = nanoid();
   const payload = { protocol: 'ws', host: ipAddress, port: boundPort, sessionId };
   console.log('Remote control host ready on', `ws://${ipAddress}:${boundPort}`);
+  bonjourService = bonjour.publish({
+    name: `Remote Control Host (${os.hostname()})`,
+    type: SERVICE_TYPE,
+    host: ipAddress,
+    port: boundPort,
+    txt: {
+      host: ipAddress,
+      sessionId,
+      protocol: 'ws'
+    }
+  });
+  bonjourService.on('up', () => {
+    console.log('Bonjour service published: %s at %s:%d', bonjourService.fqdn, ipAddress, boundPort);
+    console.log('Bonjour TXT record:', bonjourService.txt);
+  });
+  bonjourService.on('error', error => {
+    console.error('Bonjour service error', error);
+  });
   renderQr(payload);
 });
 
-process.on('SIGINT', () => {
+function shutdown() {
   console.log('Shutting down host server');
+  bonjour.unpublishAll(() => {
+    bonjour.destroy();
+  });
   wsServer.close(() => {
     httpServer.close(() => process.exit(0));
   });
-});
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
