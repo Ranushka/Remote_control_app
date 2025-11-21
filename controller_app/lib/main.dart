@@ -75,79 +75,76 @@ class ControllerHomePage extends HookWidget {
     };
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Remote Control'),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => SettingsPage(
-                  sensitivity: sensitivity.value,
-                  onSensitivityChanged: (v) => sensitivity.value = v,
-                ),
-              ));
-            },
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
-          ),
-        ],
-      ),
       body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatusBanner(
-                        label: statusLabel,
-                        controllerStatus: connectionController.status,
-                        errorMessage: connectionController.errorMessage,
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatusBanner(
+                          label: statusLabel,
+                          controllerStatus: connectionController.status,
+                          errorMessage: connectionController.errorMessage,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: () {
-                        showScanner.value = false;
-                        showDiscovery.value = true;
-                      },
-                      icon: const Icon(Icons.wifi_tethering),
-                      tooltip: 'Find Hosts',
-                    ),
-                    IconButton(
-                      onPressed: () => showScanner.value = true,
-                      icon: const Icon(Icons.qr_code_scanner),
-                      tooltip: 'Scan QR Code',
-                    ),
-                    IconButton(
-                      onPressed: () => connectionController.retry(),
-                      icon: const Icon(Icons.refresh),
-                      tooltip: 'Reconnect',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: TouchpadSurface(
-                    sensitivity: sensitivity.value,
-                    onPointerDelta: connectionController.sendMouseDelta,
-                    onSecondaryTap: () => connectionController.sendTap(button: 'right'),
-                    onTap: () => connectionController.sendTap(),
-                    onScroll: connectionController.sendScroll,
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          showScanner.value = false;
+                          showDiscovery.value = true;
+                        },
+                        icon: const Icon(Icons.wifi_tethering),
+                        tooltip: 'Find Hosts',
+                      ),
+                      IconButton(
+                        onPressed: () => showScanner.value = true,
+                        icon: const Icon(Icons.qr_code_scanner),
+                        tooltip: 'Scan QR Code',
+                      ),
+                      IconButton(
+                        onPressed: () => connectionController.retry(),
+                        icon: const Icon(Icons.refresh),
+                        tooltip: 'Reconnect',
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => SettingsPage(
+                              sensitivity: sensitivity.value,
+                              onSensitivityChanged: (v) => sensitivity.value = v,
+                            ),
+                          ));
+                        },
+                        icon: const Icon(Icons.settings),
+                        tooltip: 'Settings',
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                _QuickActions(
-                  connectionController: connectionController,
-                  context: context,
-                ),
-                const SizedBox(height: 16),
-                // Pointer sensitivity moved to Settings page.
-                const SizedBox.shrink(),
-              ],
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: TouchpadSurface(
+                      sensitivity: sensitivity.value,
+                      onPointerDelta: connectionController.sendMouseDelta,
+                      onSecondaryTap: () => connectionController.sendTap(button: 'right'),
+                      onTap: () => connectionController.sendTap(),
+                      onScroll: connectionController.sendScroll,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _QuickActions(
+                    connectionController: connectionController,
+                    context: context,
+                  ),
+                  const SizedBox(height: 16),
+                  // Pointer sensitivity moved to Settings page.
+                  const SizedBox.shrink(),
+                ],
+              ),
             ),
           ),
           if (showScanner.value) _QrScannerOverlay(onDetect: handleQr, onClose: () => showScanner.value = false),
