@@ -227,33 +227,61 @@ class _StatusBanner extends StatelessWidget {
         : Colors.white;
   }
 
+  void _showErrorDetails(BuildContext context) {
+    if (errorMessage == null || controllerStatus != ControllerStatus.error) {
+      return;
+    }
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Connection error'),
+        content: Text(errorMessage!),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: _background(context),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(color: _foreground(context), fontWeight: FontWeight.bold),
-          ),
-          if (errorMessage != null && controllerStatus == ControllerStatus.error)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                errorMessage!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
+    final foreground = _foreground(context);
+    return GestureDetector(
+      onLongPress: () => _showErrorDetails(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: _background(context),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(color: foreground, fontWeight: FontWeight.bold),
+            ),
+            if (errorMessage != null && controllerStatus == ControllerStatus.error)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  errorMessage!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: foreground.withOpacity(0.9)),
+                ),
               ),
-            )
-        ],
+          ],
+        ),
       ),
     );
   }
