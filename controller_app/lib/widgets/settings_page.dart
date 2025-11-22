@@ -6,14 +6,19 @@ class SettingsPage extends HookWidget {
     super.key,
     required this.sensitivity,
     required this.onSensitivityChanged,
+    required this.auxControlsEnabled,
+    required this.onAuxControlsChanged,
   });
 
   final double sensitivity;
   final ValueChanged<double> onSensitivityChanged;
+  final bool auxControlsEnabled;
+  final ValueChanged<bool> onAuxControlsChanged;
 
   @override
   Widget build(BuildContext context) {
-    final local = useState(sensitivity);
+    final localSensitivity = useState(sensitivity);
+    final localAuxControls = useState(auxControlsEnabled);
 
     return Scaffold(
       appBar: AppBar(
@@ -25,16 +30,16 @@ class SettingsPage extends HookWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Pointer sensitivity: ${local.value.toStringAsFixed(1)}',
+              'Pointer sensitivity: ${localSensitivity.value.toStringAsFixed(1)}',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             Slider(
               min: 0.4,
               max: 10.0,
               divisions: 96,
-              value: local.value.clamp(0.4, 10.0),
+              value: localSensitivity.value.clamp(0.4, 10.0),
               onChanged: (v) {
-                local.value = v;
+                localSensitivity.value = v;
                 onSensitivityChanged(v);
               },
             ),
@@ -42,6 +47,17 @@ class SettingsPage extends HookWidget {
             Text(
               'Use this to control how fast the pointer moves when you drag the touchpad.',
               style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const Divider(height: 32),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Show joystick & scroll controls'),
+              subtitle: const Text('Display the precision joystick with dedicated scroll buttons.'),
+              value: localAuxControls.value,
+              onChanged: (value) {
+                localAuxControls.value = value;
+                onAuxControlsChanged(value);
+              },
             ),
           ],
         ),
