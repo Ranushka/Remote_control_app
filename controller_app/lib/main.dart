@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'controller/connection_controller.dart';
 import 'controller/discovery_controller.dart';
 import 'widgets/touchpad_surface.dart';
+import 'widgets/touchpad_aux_controls.dart';
 import 'widgets/settings_page.dart';
 import 'widgets/status_banner.dart';
 import 'widgets/quick_actions.dart';
@@ -47,6 +48,11 @@ class ControllerHomePage extends HookWidget {
     final sensitivity = useState(1.0);
     final auxControlsEnabled = useState(true);
 
+    useEffect(() {
+      connectionController.tryAutoConnect();
+      return null;
+    }, [connectionController]);
+
     Future<void> handleQr(String? value) async {
       if (value == null) {
         return;
@@ -77,7 +83,6 @@ class ControllerHomePage extends HookWidget {
       ControllerStatus.connected => 'Connected',
       ControllerStatus.error => 'Error',
     };
-    final escapeTopOffset = MediaQuery.of(context).size.height * 0.14;
 
     return Scaffold(
       body: Stack(

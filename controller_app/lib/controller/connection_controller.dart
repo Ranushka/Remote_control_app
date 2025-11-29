@@ -56,6 +56,22 @@ class ConnectionController extends ChangeNotifier {
   final LastConnectionStore _lastConnectionStore;
   Timer? _reconnectTimer;
   StreamSubscription? _channelSub;
+  bool _autoConnectAttempted = false;
+
+  Future<void> tryAutoConnect() async {
+    if (_autoConnectAttempted) {
+      return;
+    }
+    _autoConnectAttempted = true;
+    try {
+      final details = await _lastConnectionStore.load();
+      if (details != null) {
+        connect(details);
+      }
+    } catch (error) {
+      debugPrint('Failed to load last connection: $error');
+    }
+  }
 
   void connect(ConnectionDetails details) {
     _details = details;

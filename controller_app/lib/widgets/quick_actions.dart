@@ -31,20 +31,20 @@ class QuickActions extends StatelessWidget {
             ),
           ],
         ),
-        _ActionGroup(
-          children: [
-            _actionButton(
-              icon: Icons.skip_previous,
-              tooltip: 'Previous',
-              onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'media.previous'}),
-            ),
-            _actionButton(
-              icon: Icons.skip_next,
-              tooltip: 'Next',
-              onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'media.next'}),
-            ),
-          ],
-        ),
+        // _ActionGroup(
+        //   children: [
+        //     _actionButton(
+        //       icon: Icons.skip_previous,
+        //       tooltip: 'Previous',
+        //       onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'media.previous'}),
+        //     ),
+        //     _actionButton(
+        //       icon: Icons.skip_next,
+        //       tooltip: 'Next',
+        //       onPressed: () => connectionController.sendEvent({'type': 'command', 'command': 'media.next'}),
+        //     ),
+        //   ],
+        // ),
         _ActionGroup(
           children: [
             _actionButton(
@@ -65,6 +65,11 @@ class QuickActions extends StatelessWidget {
               icon: Icons.fullscreen_exit,
               tooltip: 'Escape',
               onPressed: () => connectionController.sendKey('escape'),
+            ),
+            _actionButton(
+              icon: Icons.keyboard_return,
+              tooltip: 'Enter',
+              onPressed: () => connectionController.sendKey('enter'),
             ),
           ],
         ),
