@@ -8,17 +8,22 @@ class SettingsPage extends HookWidget {
     required this.onSensitivityChanged,
     required this.auxControlsEnabled,
     required this.onAuxControlsChanged,
+    required this.reverseScrollEnabled,
+    required this.onReverseScrollChanged,
   });
 
   final double sensitivity;
   final ValueChanged<double> onSensitivityChanged;
   final bool auxControlsEnabled;
   final ValueChanged<bool> onAuxControlsChanged;
+  final bool reverseScrollEnabled;
+  final ValueChanged<bool> onReverseScrollChanged;
 
   @override
   Widget build(BuildContext context) {
     final localSensitivity = useState(sensitivity);
     final localAuxControls = useState(auxControlsEnabled);
+    final localReverseScroll = useState(reverseScrollEnabled);
 
     return Scaffold(
       appBar: AppBar(
@@ -57,6 +62,16 @@ class SettingsPage extends HookWidget {
               onChanged: (value) {
                 localAuxControls.value = value;
                 onAuxControlsChanged(value);
+              },
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Reverse scrolling'),
+              subtitle: const Text('Invert scroll direction for touchpad and scroll buttons.'),
+              value: localReverseScroll.value,
+              onChanged: (value) {
+                localReverseScroll.value = value;
+                onReverseScrollChanged(value);
               },
             ),
           ],

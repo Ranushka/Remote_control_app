@@ -47,6 +47,7 @@ class ControllerHomePage extends HookWidget {
     final showDiscovery = useState(false);
     final sensitivity = useState(1.0);
     final auxControlsEnabled = useState(true);
+    final reverseScroll = useState(false);
 
     useEffect(() {
       connectionController.tryAutoConnect();
@@ -129,6 +130,8 @@ class ControllerHomePage extends HookWidget {
                               onSensitivityChanged: (v) => sensitivity.value = v,
                               auxControlsEnabled: auxControlsEnabled.value,
                               onAuxControlsChanged: (value) => auxControlsEnabled.value = value,
+                              reverseScrollEnabled: reverseScroll.value,
+                              onReverseScrollChanged: (value) => reverseScroll.value = value,
                             ),
                           ));
                         },
@@ -144,7 +147,8 @@ class ControllerHomePage extends HookWidget {
                       onPointerDelta: connectionController.sendMouseDelta,
                       onSecondaryTap: () => connectionController.sendTap(button: 'right'),
                       onTap: () => connectionController.sendTap(),
-                      onScroll: connectionController.sendScroll,
+                      onScroll: (delta) => connectionController
+                          .sendScroll(reverseScroll.value ? delta * -1 : delta),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -153,7 +157,8 @@ class ControllerHomePage extends HookWidget {
                     TouchpadAuxControls(
                       sensitivity: sensitivity.value,
                       onPointerDelta: connectionController.sendMouseDelta,
-                      onScroll: connectionController.sendScroll,
+                      onScroll: (delta) => connectionController
+                          .sendScroll(reverseScroll.value ? delta * -1 : delta),
                     ),
                     const SizedBox(height: 12),
                   ],

@@ -1,13 +1,13 @@
 # Remote Control Host (Node.js)
 
-This package exposes a lightweight WebSocket server that the iOS/iPadOS controller can use to deliver mouse and keyboard events to a Mac.
+This package exposes a lightweight WebSocket server that the iOS/iPadOS controller can use to deliver mouse and keyboard events to a Mac or Linux desktop.
 
 ## Features
 
 - Detects the primary IPv4 address and spins up a WebSocket server.
 - Prints a QR code containing the connection payload (`ws://<ip>:<port>` and session identifier).
 - Parses controller messages for mouse, keyboard, scroll, and custom commands.
-- Delegates to a pluggable `InputBridge` that uses [`robotjs`](https://github.com/octalmage/robotjs) when available, otherwise logs events for development.
+- Delegates to a pluggable `InputBridge` that uses [`robotjs`](https://github.com/octalmage/robotjs) when available. On Linux, it will fall back to `xdotool`/`pactl`/`amixer` when robot access is unavailable.
 
 ## Getting Started
 
@@ -15,6 +15,23 @@ This package exposes a lightweight WebSocket server that the iOS/iPadOS controll
 cd host
 npm install
 npm start
+```
+
+### Linux prerequisites
+
+The host can run without extra setup if `robotjs` loads successfully. If it cannot (headless environments or missing build tools), the bridge uses command-line fallbacks:
+
+- `xdotool` for mouse, keyboard, scroll, and text input
+- `pactl` (or `amixer` as a fallback) for volume and mute control
+
+Install them with your package manager, for example:
+
+```bash
+# Debian/Ubuntu
+sudo apt-get install xdotool pulseaudio-utils alsa-utils
+
+# Fedora
+sudo dnf install xdotool pulseaudio-utils alsa-utils
 ```
 
 When the server boots it will display a QR code in the terminal. Scan the code with the Flutter controller app to pair immediately.
